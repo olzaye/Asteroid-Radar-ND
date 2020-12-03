@@ -2,12 +2,10 @@ package com.udacity.asteroidradar.api
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.udacity.asteroidradar.Constants
 import com.udacity.asteroidradar.Constants.API_KEY
 import com.udacity.asteroidradar.Constants.API_KEY_QUERY_KEY
 import com.udacity.asteroidradar.Constants.BASE_URL
 import com.udacity.asteroidradar.model.PictureOfDay
-import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
@@ -24,26 +22,29 @@ interface NeoService {
     suspend fun getNasaImage(): PictureOfDay?
 }
 
+object AsteroidApi {
+    val retrofitService: NeoService by lazy { getRetrofit().create(NeoService::class.java) }
+    val retrofitWithMoshiService: NeoService by lazy { getRetrofit(true).create(NeoService::class.java) }
+}
 
 val moshi: Moshi = Moshi.Builder()
     .add(KotlinJsonAdapterFactory())
     .build()
 
-private val retrofit = Retrofit.Builder()
-    .client(getHttpClient())
-    .addConverterFactory(ScalarsConverterFactory.create())
-    .baseUrl(BASE_URL).build()
+fun getRetrofit(withMoshi: Boolean = false): Retrofit {
+    val builder = Retrofit.Builder()
+        .client(getHttpClient())
+        .baseUrl(BASE_URL)
 
-private val retrofitWithMoshi = Retrofit.Builder()
-    .client(getHttpClient())
-    .addConverterFactory(MoshiConverterFactory.create(moshi))
-    .baseUrl(BASE_URL)
-    .build()
+    builder.addConverterFactory(
+        if (withMoshi) {
+            MoshiConverterFactory.create(moshi)
+        } else {
+            ScalarsConverterFactory.create()
+        }
+    )
 
-
-object AsteroidApi {
-    val retrofitService: NeoService by lazy { retrofit.create(NeoService::class.java) }
-    val retrofitWithMoshiService: NeoService by lazy { retrofitWithMoshi.create(NeoService::class.java) }
+    return builder.build()
 }
 
 fun getHttpClient(): OkHttpClient {
