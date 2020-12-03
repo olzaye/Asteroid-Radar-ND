@@ -8,4 +8,14 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="Text.White.Bold.18.Bold" parent="Widget.AppCompat.TextView">
+        <item name="android:textSize">@dimen/text_size_18</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="Text.White.Bold.16" parent="Widget.AppCompat.TextView">
+        <item name="android:textSize">@dimen/text_size_16</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
 </resources>
