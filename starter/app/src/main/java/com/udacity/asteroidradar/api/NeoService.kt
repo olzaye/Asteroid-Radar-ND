@@ -1,22 +1,26 @@
 package com.udacity.asteroidradar.api
 
+import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.udacity.asteroidradar.Constants.API_KEY
 import com.udacity.asteroidradar.Constants.API_KEY_QUERY_KEY
 import com.udacity.asteroidradar.Constants.BASE_URL
 import com.udacity.asteroidradar.model.PictureOfDay
+import kotlinx.coroutines.Deferred
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.QueryMap
+import java.util.logging.Level
 
 interface NeoService {
 
     @GET("/neo/rest/v1/feed")
-    suspend fun getAsteroidInformation(@QueryMap map: Map<String, String>): String?
+    fun getAsteroidInformation(@QueryMap map: Map<String, String>): Deferred<String>?
 
     @GET("planetary/apod")
     suspend fun getNasaImage(): PictureOfDay?
@@ -34,6 +38,7 @@ val moshi: Moshi = Moshi.Builder()
 fun getRetrofit(withMoshi: Boolean = false): Retrofit {
     val builder = Retrofit.Builder()
         .client(getHttpClient())
+        .addCallAdapterFactory(CoroutineCallAdapterFactory())
         .baseUrl(BASE_URL)
 
     builder.addConverterFactory(
@@ -59,5 +64,9 @@ fun getHttpClient(): OkHttpClient {
         val newRequest = request.newBuilder().url(url)
         return@addInterceptor chain.proceed(newRequest.build())
     }
-    return httpClient.build()
+
+    val logInterceptor = HttpLoggingInterceptor().apply {
+        level = HttpLoggingInterceptor.Level.BODY
+    }
+    return httpClient.addInterceptor(logInterceptor).build()
 }

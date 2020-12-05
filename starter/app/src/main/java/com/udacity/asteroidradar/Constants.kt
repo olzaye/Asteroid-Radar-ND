@@ -11,4 +11,6 @@ object Constants {
     const val START_DATE_QUERY_KEY = "start_date"
     const val END_DATE_QUERY_KEY = "end_date"
     const val API_KEY_QUERY_KEY = "api_key"
+
+    const val TABLE_NAME = "asteroid_table"
 }

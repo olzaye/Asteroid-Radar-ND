@@ -1,69 +1,81 @@
 package com.udacity.asteroidradar.main
 
+import android.app.Application
+import android.content.Context
 import android.util.Log
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import com.udacity.asteroidradar.model.Asteroid
 import com.udacity.asteroidradar.Constants
 import com.udacity.asteroidradar.api.AsteroidApi
 import com.udacity.asteroidradar.api.AsteroidApi.retrofitWithMoshiService
 import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
+import com.udacity.asteroidradar.helper.getFormattedCurrentTime
+import com.udacity.asteroidradar.helper.getQueryParamMap
 import com.udacity.asteroidradar.model.PictureOfDay
+import com.udacity.asteroidradar.room.AsteroidDatabase
 import kotlinx.coroutines.launch
 import org.json.JSONObject
+import java.lang.Exception
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.collections.ArrayList
 
-class MainViewModel : ViewModel() {
+class MainViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val _asteroidList = MutableLiveData<ArrayList<Asteroid>>()
-    val asteroidList: LiveData<ArrayList<Asteroid>>
-        get() = _asteroidList
+    private val database = AsteroidDatabase.getInstance(application)
+    private val repository = MainRepository(database)
+
+    val asteroidList: LiveData<List<Asteroid>>
+        get() = getAsteroids()
 
     private val _pictureOfDay = MutableLiveData<PictureOfDay>()
     val pictureOfDay: LiveData<PictureOfDay>
         get() = _pictureOfDay
 
     init {
-        getAsteroids()
+        saveAsteroids()
         getImages()
+        getAsteroids()
+    }
+
+    private fun getAsteroids(): LiveData<List<Asteroid>> {
+        val calendar = Calendar.getInstance()
+        val startTime = calendar.time
+        return repository.getAsteroidFromDb(getFormattedCurrentTime())
     }
 
     private fun getImages() {
         viewModelScope.launch {
-            val response = retrofitWithMoshiService.getNasaImage()
-            response?.let {
-                _pictureOfDay.value = it
-            } ?: run {
-                Log.e("MainViewModel", "picture of day response is null")
+            try {
+                val response = retrofitWithMoshiService.getNasaImage()
+                response?.let {
+                    _pictureOfDay.value = it
+                } ?: run {
+                    Log.e("MainViewModel", "picture of day response is null")
+                }
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "picture of day error ${e.message}")
             }
         }
     }
 
-    private fun getAsteroids() {
+    private fun saveAsteroids() {
         viewModelScope.launch {
-            val response = AsteroidApi.retrofitService.getAsteroidInformation(getQueryParamMap())
-            response?.let {
-                val list = parseAsteroidsJsonResult(JSONObject(it))
-                _asteroidList.value = list
-            } ?: run {
-                Log.e("MainViewModel", "response is null")
+            try {
+                repository.saveAsteroidData(getQueryParamMap())
+            } catch (e: Exception) {
+                Log.e("MainViewModel", "error ${e.message}")
             }
         }
     }
 
-    private fun getQueryParamMap(): Map<String, String> {
-        val dateFormat = SimpleDateFormat(Constants.API_QUERY_DATE_FORMAT, Locale.getDefault())
-        val calendar = Calendar.getInstance()
-        val startTime = calendar.time
-        calendar.add(Calendar.DAY_OF_YEAR, 7)
-        val endTime = calendar.time
-
-        return mapOf(
-            Constants.START_DATE_QUERY_KEY to dateFormat.format(startTime),
-            Constants.END_DATE_QUERY_KEY to dateFormat.format(endTime)
-        )
+    class Factory(val app: Application) : ViewModelProvider.Factory {
+        override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return MainViewModel(app) as T
+            }
+            throw IllegalArgumentException("Unable to construct viewmodel")
+        }
     }
 }
