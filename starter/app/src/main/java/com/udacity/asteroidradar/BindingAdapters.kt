@@ -48,3 +48,18 @@ fun loadUrl(view: ImageView, pictureOfDay: PictureOfDay?) {
         Picasso.with(view.context).load(it).into(view)
     }
 }
+
+@BindingAdapter("dynamicallyContentDescription")
+fun setDynamicallyContentDescription(view: ImageView, pictureOfDay: PictureOfDay?) {
+    view.contentDescription = pictureOfDay?.title?.takeIf { it.isNotEmpty() }?.let {
+        return@let view.context.getString(
+            R.string.nasa_picture_of_day_content_description_format,
+            it
+        )
+    } ?: run {
+        return@run view.context.getString(R.string.this_is_nasa_s_picture_of_day_showing_nothing_yet)
+    }
+}
+
+
+
