@@ -2,7 +2,6 @@ package com.udacity.asteroidradar.main
 
 import android.util.Log
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Transformations
 import com.udacity.asteroidradar.api.AsteroidApi
 import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
 import com.udacity.asteroidradar.model.Asteroid
@@ -17,7 +16,7 @@ class MainRepository(private val database: AsteroidDatabase) {
     suspend fun saveAsteroidData(queryMap: Map<String, String>) {
         withContext(Dispatchers.IO) {
             try {
-                val response = AsteroidApi.retrofitService.getAsteroidInformation(queryMap)?.await()
+                val response = AsteroidApi.retrofitService.getAsteroidInformation(queryMap)
                 response?.let {
                     val list = parseAsteroidsJsonResult(JSONObject(it))
                     database.asteroidDatabaseDao.insertAllAsteroid(*list.toTypedArray())
@@ -28,11 +27,13 @@ class MainRepository(private val database: AsteroidDatabase) {
         }
     }
 
-
     fun getAsteroidFromDb(startDate: String): LiveData<List<Asteroid>> {
         return database.asteroidDatabaseDao.getAsteroids(startDate)
     }
 
-//    val asteroids: LiveData<List<Asteroid>> =
-//        Transformations.map(database.asteroidDatabaseDao.getAsteroids()) { it }
+    suspend fun delete(startDate: String) {
+        withContext(Dispatchers.IO) {
+            database.asteroidDatabaseDao.deleteOldAsteroids(startDate)
+        }
+    }
 }

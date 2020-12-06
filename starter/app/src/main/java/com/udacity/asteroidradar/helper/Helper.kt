@@ -7,7 +7,8 @@ import java.util.*
 
 fun getQueryParamMap(): Map<String, String> {
     return mapOf(
-        Constants.START_DATE_QUERY_KEY to getFormattedCurrentTime()
+        Constants.START_DATE_QUERY_KEY to getFormattedCurrentTime(),
+        Constants.END_DATE_QUERY_KEY to getSeventhDateFromNow()
     )
 }
 
@@ -18,4 +19,12 @@ fun getFormattedCurrentTime(): String {
     val calendar = Calendar.getInstance()
     val startTime = calendar.time
     return getDateFormat().format(startTime)
+}
+
+fun getSeventhDateFromNow(): String {
+    val calendar = Calendar.getInstance()
+    calendar.add(Calendar.DAY_OF_YEAR, 7)
+    val seventhDateFromNow = calendar.time
+
+    return getDateFormat().format(seventhDateFromNow)
 }

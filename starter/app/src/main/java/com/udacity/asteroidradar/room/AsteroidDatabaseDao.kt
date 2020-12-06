@@ -1,10 +1,7 @@
 package com.udacity.asteroidradar.room
 
 import androidx.lifecycle.LiveData
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
+import androidx.room.*
 import com.udacity.asteroidradar.Constants
 import com.udacity.asteroidradar.model.Asteroid
 
@@ -16,4 +13,7 @@ interface AsteroidDatabaseDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertAllAsteroid(vararg asteroid: Asteroid)
+
+    @Query("DELETE FROM ${Constants.TABLE_NAME} WHERE  close_approach_date < :startDate")
+    fun deleteOldAsteroids(startDate: String)
 }

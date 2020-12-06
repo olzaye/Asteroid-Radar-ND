@@ -1,24 +1,15 @@
 package com.udacity.asteroidradar.main
 
 import android.app.Application
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.*
-import com.udacity.asteroidradar.model.Asteroid
-import com.udacity.asteroidradar.Constants
-import com.udacity.asteroidradar.api.AsteroidApi
 import com.udacity.asteroidradar.api.AsteroidApi.retrofitWithMoshiService
-import com.udacity.asteroidradar.api.parseAsteroidsJsonResult
 import com.udacity.asteroidradar.helper.getFormattedCurrentTime
 import com.udacity.asteroidradar.helper.getQueryParamMap
+import com.udacity.asteroidradar.model.Asteroid
 import com.udacity.asteroidradar.model.PictureOfDay
 import com.udacity.asteroidradar.room.AsteroidDatabase
 import kotlinx.coroutines.launch
-import org.json.JSONObject
-import java.lang.Exception
-import java.text.SimpleDateFormat
-import java.util.*
-import kotlin.collections.ArrayList
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -36,11 +27,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         saveAsteroids()
         getImages()
         getAsteroids()
+
+        viewModelScope.launch {
+            repository.delete(getFormattedCurrentTime())
+        }
     }
 
     private fun getAsteroids(): LiveData<List<Asteroid>> {
-        val calendar = Calendar.getInstance()
-        val startTime = calendar.time
         return repository.getAsteroidFromDb(getFormattedCurrentTime())
     }
 
@@ -64,7 +57,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 repository.saveAsteroidData(getQueryParamMap())
             } catch (e: Exception) {
-                Log.e("MainViewModel", "error ${e.message}")
+                Log.e("MainViewModel", "error by saveAsteroids ${e.message}")
             }
         }
     }

@@ -18,7 +18,13 @@ class AsteroidRadarApp : Application() {
             val constraints = Constraints.Builder()
                 .setRequiredNetworkType(NetworkType.UNMETERED)
                 .setRequiresBatteryNotLow(true)
-                .setRequiresCharging(true).build()
+                .setRequiresCharging(true)
+                .apply {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+                        setRequiresDeviceIdle(true)
+                    }
+                }
+                .build()
 
             val workRequest = PeriodicWorkRequestBuilder<NewestAsteroidWorker>(1, TimeUnit.DAYS)
                 .setConstraints(constraints)

@@ -7,20 +7,17 @@ import com.udacity.asteroidradar.Constants.API_KEY
 import com.udacity.asteroidradar.Constants.API_KEY_QUERY_KEY
 import com.udacity.asteroidradar.Constants.BASE_URL
 import com.udacity.asteroidradar.model.PictureOfDay
-import kotlinx.coroutines.Deferred
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.converter.scalars.ScalarsConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.QueryMap
-import java.util.logging.Level
 
 interface NeoService {
 
     @GET("/neo/rest/v1/feed")
-    fun getAsteroidInformation(@QueryMap map: Map<String, String>): Deferred<String>?
+    suspend fun getAsteroidInformation(@QueryMap map: Map<String, String>): String?
 
     @GET("planetary/apod")
     suspend fun getNasaImage(): PictureOfDay?
@@ -65,8 +62,5 @@ fun getHttpClient(): OkHttpClient {
         return@addInterceptor chain.proceed(newRequest.build())
     }
 
-    val logInterceptor = HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
-    }
-    return httpClient.addInterceptor(logInterceptor).build()
+    return httpClient.build()
 }
